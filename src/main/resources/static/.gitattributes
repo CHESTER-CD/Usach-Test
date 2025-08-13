@@ -1,0 +1,19 @@
+# Establece el comportamiento predeterminado para que Git maneje los finales de línea automáticamente.
+# Detectará si un archivo es de texto y asegurará que use finales de línea LF en el repositorio.
+* text=auto
+
+# Archivos de texto que deben tener finales de línea LF (Linux/macOS)
+*.java text
+*.xml text
+*.html text
+*.css text
+*.js text
+*.properties text
+*.sh text eol=lf
+
+# Archivos de Windows que deben tener finales de línea CRLF
+*.cmd text eol=crlf
+
+# Archivos binarios que Git no debe modificar
+*.jar binary
+*.png binary
