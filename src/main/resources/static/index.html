@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Contraseñas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        #results { margin-top: 1em; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Analizador de Contraseñas</h1>
+
+    <div>
+        <label for="passwordInput">Introduce una contraseña:</label>
+        <input type="text" id="passwordInput">
+        <button onclick="analyzePassword()">Analizar</button>
+    </div>
+
+    <div id="results">
+        <h2>Resultados del Análisis</h2>
+        <table id="resultsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Análisis</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Longitud</td><td id="longitud"></td></tr>
+                <tr><td>Cantidad de palabras</td><td id="cantidadPalabras"></td></tr>
+                <tr><td>Tiene mayúsculas</td><td id="tieneMayusculas"></td></tr>
+                <tr><td>SHA-256 Hash</td><td id="sha256Hash"></td></tr>
+                <tr><td>MD5 Hash</td><td id="md5Hash"></td></tr>
+                <tr><td>Base64 Codificación</td><td id="base64Encoded"></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function analyzePassword() {
+            const password = document.getElementById('passwordInput').value;
+            const resultsTable = document.getElementById('resultsTable');
+
+            // Ocultar la tabla mientras se carga
+            resultsTable.style.display = 'none';
+
+            try {
+                // Petición POST a tu API
+                const response = await fetch('/api/password/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: password
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Rellenar la tabla con los datos recibidos
+                document.getElementById('longitud').textContent = data.longitud;
+                document.getElementById('cantidadPalabras').textContent = data.cantidadPalabras;
+                document.getElementById('tieneMayusculas').textContent = data.tieneMayusculas ? 'Sí' : 'No';
+                document.getElementById('sha256Hash').textContent = data.sha256Hash;
+                document.getElementById('md5Hash').textContent = data.md5Hash;
+                document.getElementById('base64Encoded').textContent = data.base64Encoded;
+
+                // Mostrar la tabla
+                resultsTable.style.display = 'table';
+            } catch (error) {
+                console.error('Error al analizar la contraseña:', error);
+                alert('Hubo un error al procesar la solicitud.');
+            }
+        }
+    </script>
+</body>
+</html>
