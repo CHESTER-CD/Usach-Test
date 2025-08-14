@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/password")
@@ -22,7 +24,6 @@ public class PasswordController {
 
         // Lógica de análisis y conversiones
         response.setLongitud(password.length());
-        response.setCantidadPalabras(password.split("\\s+").length);
 
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
         byte[] hashBytes = sha256.digest(password.getBytes(StandardCharsets.UTF_8));
@@ -46,6 +47,16 @@ public class PasswordController {
         response.setBase64Encoded(encodedString);
         
         response.setTieneMayusculas(!password.equals(password.toLowerCase()));
+
+        Pattern specialCharPatten = Pattern.compile("[^a-z0-9 ]", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = specialCharPatten.matcher(password);
+        response.setTieneCaracterEspecial(matcher.find());
+
+        Pattern numberPatten = Pattern.compile("[0-9]");
+        Matcher numberMatcher = numberPatten.matcher(password);
+        response.setTieneNumero(numberMatcher.find());
+
+        response.setTieneLongitudMinima(password.length() >= 8);
 
         return response;
     }
