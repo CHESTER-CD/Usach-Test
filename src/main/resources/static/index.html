@@ -29,6 +29,7 @@
         <label for="passwordInput">Introduce una contraseña:</label>
         <input type="text" id="passwordInput">
         <button onclick="analyzePassword()">Analizar</button>
+        <div id="passwordErrors" style="color: red; margin-top: 0.5em;"></div>
     </div>
 
     <div id="results">
@@ -57,9 +58,11 @@
         async function analyzePassword() {
             const password = document.getElementById('passwordInput').value;
             const resultsTable = document.getElementById('resultsTable');
+                const errorsDiv = document.getElementById('passwordErrors');
 
             // Ocultar la tabla mientras se carga
             resultsTable.style.display = 'none';
+                errorsDiv.innerHTML = '';
 
             try {
                 // Petición POST a tu API
@@ -71,27 +74,34 @@
                     body: password
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
+                    if (!response.ok) {
+                        // Si la respuesta es error, mostrar los mensajes debajo del campo
+                        const errorData = await response.json();
+                        if (errorData.errors && Array.isArray(errorData.errors)) {
+                            errorsDiv.innerHTML = errorData.errors.map(e => `<div>${e}</div>`).join('');
+                        } else {
+                            errorsDiv.textContent = 'Hubo un error al procesar la solicitud.';
+                        }
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    // Rellenar la tabla con los datos recibidos
+                    document.getElementById('tieneLongitudMinima').textContent = data.tieneLongitudMinima ? 'Sí' : 'No';
+                    document.getElementById('tieneMayusculas').textContent = data.tieneMayusculas ? 'Sí' : 'No';
+                    document.getElementById('tieneCaracterEspecial').textContent = data.tieneCaracterEspecial ? 'Sí' : 'No';
+                    document.getElementById('tieneNumero').textContent = data.tieneNumero ? 'Sí' : 'No';
+                    document.getElementById('sha256Hash').textContent = data.sha256Hash;
+                    document.getElementById('md5Hash').textContent = data.md5Hash;
+                    document.getElementById('base64Encoded').textContent = data.base64Encoded;
+
+                    // Mostrar la tabla
+                    resultsTable.style.display = 'table';
+                } catch (error) {
+                    console.error('Error al analizar la contraseña:', error);
+                    errorsDiv.textContent = 'Hubo un error al procesar la solicitud.';
                 }
-
-                const data = await response.json();
-                
-                // Rellenar la tabla con los datos recibidos
-                document.getElementById('tieneLongitudMinima').textContent = data.tieneLongitudMinima ? 'Sí' : 'No';
-                document.getElementById('tieneMayusculas').textContent = data.tieneMayusculas ? 'Sí' : 'No';
-                document.getElementById('tieneCaracterEspecial').textContent = data.tieneCaracterEspecial ? 'Sí' : 'No';
-                document.getElementById('tieneNumero').textContent = data.tieneNumero ? 'Sí' : 'No';
-                document.getElementById('sha256Hash').textContent = data.sha256Hash;
-                document.getElementById('md5Hash').textContent = data.md5Hash;
-                document.getElementById('base64Encoded').textContent = data.base64Encoded;
-
-                // Mostrar la tabla
-                resultsTable.style.display = 'table';
-            } catch (error) {
-                console.error('Error al analizar la contraseña:', error);
-                alert('Hubo un error al procesar la solicitud.');
-            }
         }
     </script>
 </body>
