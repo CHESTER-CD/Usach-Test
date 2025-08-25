@@ -3,11 +3,13 @@ package com.midemo.password.password_analyzer.dto;
 public class PasswordAnalysisResponse {
 
     private int longitud;
-    private int cantidadPalabras;
     private String sha256Hash;
     private String md5Hash;
     private String base64Encoded;
     private boolean tieneMayusculas;
+    private boolean tieneCaracterEspecial;
+    private boolean tieneNumero;
+    private boolean tieneLongitudMinima;
 
     // Puedes usar la funcionalidad de tu IDE para generar los getters y setters automáticamente
     
@@ -17,14 +19,6 @@ public class PasswordAnalysisResponse {
 
     public void setLongitud(int longitud) {
         this.longitud = longitud;
-    }
-
-    public int getCantidadPalabras() {
-        return cantidadPalabras;
-    }
-
-    public void setCantidadPalabras(int cantidadPalabras) {
-        this.cantidadPalabras = cantidadPalabras;
     }
 
     public String getSha256Hash() {
@@ -57,5 +51,29 @@ public class PasswordAnalysisResponse {
 
     public void setTieneMayusculas(boolean tieneMayusculas) {
         this.tieneMayusculas = tieneMayusculas;
+    }
+
+    public boolean isTieneCaracterEspecial() {
+        return tieneCaracterEspecial;
+    }
+
+    public void setTieneCaracterEspecial(boolean tieneCaracterEspecial) {
+        this.tieneCaracterEspecial = tieneCaracterEspecial;
+    }
+
+    public boolean isTieneNumero() {
+        return tieneNumero;
+    }
+
+    public void setTieneNumero(boolean tieneNumero) {
+        this.tieneNumero = tieneNumero;
+    }
+
+    public boolean isTieneLongitudMinima() {
+        return tieneLongitudMinima;
+    }
+
+    public void setTieneLongitudMinima(boolean tieneLongitudMinima) {
+        this.tieneLongitudMinima = tieneLongitudMinima;
     }
 }

@@ -2,8 +2,14 @@ name: CI
 
 on:
   push:
+<<<<<<< HEAD
     branches: 
         main
+=======
+    branches: [ main, V0.9 ]
+  pull_request:
+    branches: [ main, V0.9 ]
+>>>>>>> jcmod
 
 jobs:
   build:
@@ -41,6 +47,7 @@ jobs:
     #   run: mvn deploy
 
     # Opcional: SonarCloud análisis
+<<<<<<< HEAD
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       with:
@@ -49,3 +56,13 @@ jobs:
           -Dsonar.projectKey=CHESTER-CD_Usach-Test
           -Dsonar.organization=chester-cd
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+=======
+    # - name: SonarCloud Scan
+    #   uses: SonarSource/sonarcloud-github-action@v2
+    #   with:
+    #     projectBaseDir: .
+    #     args: >
+    #       -Dsonar.projectKey=your_project_key
+    #       -Dsonar.organization=your_org
+    #       -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+>>>>>>> jcmod
