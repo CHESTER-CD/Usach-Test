@@ -58,6 +58,11 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>3.9.1.2184</version>
+        </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -103,8 +108,9 @@
         <artifactId>dependency-check-maven</artifactId>
         <version>12.1.0</version>
         <configuration>
-          <!-- Se agregó la clave de API de NVD para acelerar el análisis de dependencias. -->
-          <nvdApiKey>8a1f19a3-a67f-4f5e-be50-efc3dbb318e7</nvdApiKey>
+          <nvdDownloadDisabled>true</nvdDownloadDisabled>
+          <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
+          <skip>false</skip>
         </configuration>
         <executions>
             <execution>
