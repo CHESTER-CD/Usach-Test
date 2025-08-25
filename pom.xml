@@ -1,40 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.5.4</version>
-    <relativePath/> <!-- lookup parent from repository -->
+    <relativePath/>
   </parent>
+
   <groupId>com.midemo.password</groupId>
   <artifactId>password-analyzer</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>password-analyzer</name>
   <description>Demo project for Spring Boot</description>
-  <url/>
-  <licenses>
-    <license/>
-  </licenses>
-  <developers>
-    <developer/>
-  </developers>
-  <scm>
-    <connection/>
-    <developerConnection/>
-    <tag/>
-    <url/>
-  </scm>
+
   <properties>
     <java.version>21</java.version>
-    <checkstyle.version>8.41</checkstyle.version>
+    <checkstyle.version>3.3.1</checkstyle.version>
+    <jacoco.version>0.8.11</jacoco.version>
+    <owasp.dc.version>12.1.0</owasp.dc.version>
   </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webflux</artifactId>
@@ -45,6 +40,7 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>io.projectreactor</groupId>
       <artifactId>reactor-test</artifactId>
@@ -54,14 +50,17 @@
 
   <build>
     <plugins>
+      <!-- Ejecutable Spring Boot -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+
+      <!-- Checkstyle falla el build si hay violaciones -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.2</version>
+        <version>${checkstyle.version}</version>
         <configuration>
           <configLocation>checkstyle.xml</configLocation>
           <encoding>UTF-8</encoding>
@@ -71,18 +70,20 @@
         </configuration>
         <executions>
           <execution>
-            <id>validate</id>
-            <phase>validate</phase>
+            <id>checkstyle-verify</id>
+            <phase>verify</phase>
             <goals>
               <goal>check</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
+
+      <!-- JaCoCo (report en verify) -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.11</version>
+        <version>${jacoco.version}</version>
         <executions>
           <execution>
             <goals>
@@ -90,56 +91,45 @@
             </goals>
           </execution>
           <execution>
-            <id>report</id>
-            <phase>test</phase>
+            <id>jacoco-report</id>
+            <phase>verify</phase>
             <goals>
               <goal>report</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
+
+      <!-- OWASP Dependency-Check (rápido con caché y sin autoupdate continuo) -->
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <version>12.1.0</version>
+        <version>${owasp.dc.version}</version>
         <configuration>
-          <!-- Deshabilitamos la descarga de la base de datos de NVD. -->
-          <nvdDownloadDisabled>true</nvdDownloadDisabled>
-
-          <!-- Habilitamos el analizador de OSS Index, que es mucho más rápido. -->
-          <!-- Esto omite la descarga de la base de datos NVD local. -->
-          <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
-
-          <!-- Deshabilitamos los analizadores que intentan descargar bases de datos. -->
-          <analyzers>
-            <retirejsEnabled>false</retirejsEnabled>
-            <nvdEnabled>false</nvdEnabled>
-          </analyzers>
-          
-          <!-- Mantener el resto de la configuración. -->
-          <skip>false</skip>
+          <!-- Usa la DB local si existe; no intenta actualizar en cada run -->
+          <autoupdate>false</autoupdate>
+          <!-- Considera “fresca” la DB por 7 días -->
+          <cveValidForHours>168</cveValidForHours>
+          <!-- Ruta default donde cachearemos la DB con actions/cache -->
+          <dataDirectory>${user.home}/.m2/repository/org/owasp/dependency-check-data</dataDirectory>
+          <!-- (Opcional) falla si hay CVSS alto -->
+          <!-- <failOnCVSS>7.0</failOnCVSS> -->
+          <!-- Formatos de reporte -->
+          <formats>HTML,JSON</formats>
+          <!-- API key desde env (se inyecta en Actions) -->
+          <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
         </configuration>
         <executions>
-            <execution>
-                <goals>
-                    <goal>check</goal>
-                </goals>
-            </execution>
+          <!-- NO lo amarramos a una fase; lo invocamos desde CI de forma condicional -->
+          <execution>
+            <id>dc-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>none</phase>
+          </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.1.2</version>
-                <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
-
 </project>
