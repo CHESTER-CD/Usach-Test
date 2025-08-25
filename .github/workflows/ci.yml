@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ JCANDIA ]
   schedule:
-    - cron: '0 6 * * 1'   # Lunes 06:00 UTC (ajusta si prefieres)
+    - cron: '0 6 * * 1'   # Lunes 06:00 UTC
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # mejor para Sonar (blame, PR decoration)
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -32,7 +32,6 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Cache de OWASP Dependency-Check DB
       - name: Cache OWASP DC data
         uses: actions/cache@v4
         with:
@@ -41,7 +40,6 @@ jobs:
           restore-keys: |
             owasp-db-${{ runner.os }}-
 
-      # Detectar cambios de dependencias
       - name: Detect dependency changes
         id: changes
         uses: dorny/paths-filter@v3
@@ -51,12 +49,11 @@ jobs:
               - 'pom.xml'
               - '**/pom.xml'
 
-      # Build + tests + checkstyle + jacoco (por estar en verify)
+      # Compila ANTES del análisis (para generar target/classes y jacoco.xml)
       - name: Build, test, checkstyle & coverage
         run: mvn -B -ntp clean verify
 
-      # --- SonarCloud (acción oficial v4) ---
-      # Evita fallos en PRs desde forks (no tienen secrets)
+      # --- SonarCloud (acción oficial) ---
       - name: SonarCloud Scan
         if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false }}
         uses: SonarSource/sonarqube-scan-action@v4
@@ -68,6 +65,11 @@ jobs:
             -Dsonar.organization=chester-cd
             -Dsonar.projectKey=CHESTER-CD_Usach-Test
             -Dsonar.qualitygate.wait=true
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test/java
+            -Dsonar.java.binaries=target/classes
+            -Dsonar.junit.reportPaths=target/surefire-reports
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
       # --- OWASP: solo si cambian deps o en el schedule semanal ---
       - name: Security scan (OWASP Dependency-Check)
@@ -76,7 +78,6 @@ jobs:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: mvn -B -ntp org.owasp:dependency-check-maven:check
 
-      # Artefactos útiles para revisar
       - name: Upload reports & JAR
         uses: actions/upload-artifact@v4
         with:
