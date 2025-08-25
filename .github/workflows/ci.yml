@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ JCANDIA ]
   schedule:
-    - cron: '0 6 * * 1'   # Lunes 06:00 UTC (ajusta horario si quieres)
+    - cron: '0 6 * * 1'   # Lunes 06:00 UTC (ajusta si prefieres)
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -14,14 +14,16 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write  # para decoración de PR por Sonar
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # mejor para Sonar (blame, PR decoration)
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -30,15 +32,16 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Cache de la DB de OWASP (evita mega-descarga cada vez)
+      # Cache de OWASP Dependency-Check DB
       - name: Cache OWASP DC data
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository/org/owasp/dependency-check-data
           key: owasp-db-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: owasp-db-${{ runner.os }}-
+          restore-keys: |
+            owasp-db-${{ runner.os }}-
 
-      # Detectar si cambió pom.xml (para decidir si correr OWASP)
+      # Detectar cambios de dependencias
       - name: Detect dependency changes
         id: changes
         uses: dorny/paths-filter@v3
@@ -48,18 +51,32 @@ jobs:
               - 'pom.xml'
               - '**/pom.xml'
 
-      # Compila, corre tests, checkstyle y jacoco (por estar en verify)
+      # Build + tests + checkstyle + jacoco (por estar en verify)
       - name: Build, test, checkstyle & coverage
         run: mvn -B -ntp clean verify
 
-      # OWASP: solo si cambiaron deps o en la ejecución programada
+      # --- SonarCloud (acción oficial v4) ---
+      # Evita fallos en PRs desde forks (no tienen secrets)
+      - name: SonarCloud Scan
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false }}
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.organization=chester-cd
+            -Dsonar.projectKey=CHESTER-CD_Usach-Test
+            -Dsonar.qualitygate.wait=true
+
+      # --- OWASP: solo si cambian deps o en el schedule semanal ---
       - name: Security scan (OWASP Dependency-Check)
         if: steps.changes.outputs.deps == 'true' || github.event_name == 'schedule'
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: mvn -B -ntp org.owasp:dependency-check-maven:check
 
-      # Publicar artefactos y reportes
+      # Artefactos útiles para revisar
       - name: Upload reports & JAR
         uses: actions/upload-artifact@v4
         with:

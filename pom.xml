@@ -56,7 +56,7 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
-      <!-- Checkstyle falla el build si hay violaciones -->
+      <!-- Checkstyle en verify -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -72,63 +72,48 @@
           <execution>
             <id>checkstyle-verify</id>
             <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
+            <goals><goal>check</goal></goals>
           </execution>
         </executions>
       </plugin>
 
-      <!-- JaCoCo (report en verify) -->
+      <!-- JaCoCo en verify (genera target/site/jacoco/jacoco.xml) -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco.version}</version>
         <executions>
           <execution>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
+            <goals><goal>prepare-agent</goal></goals>
           </execution>
           <execution>
             <id>jacoco-report</id>
             <phase>verify</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
+            <goals><goal>report</goal></goals>
           </execution>
         </executions>
       </plugin>
 
-      <!-- OWASP Dependency-Check (rápido con caché y sin autoupdate continuo) -->
+      <!-- OWASP Dependency-Check (invocado desde CI; no ligado a verify) -->
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
         <version>${owasp.dc.version}</version>
         <configuration>
-          <!-- Usa la DB local si existe; no intenta actualizar en cada run -->
-          <autoupdate>false</autoupdate>
-          <!-- Considera “fresca” la DB por 7 días -->
-          <cveValidForHours>168</cveValidForHours>
-          <!-- Ruta default donde cachearemos la DB con actions/cache -->
+          <!-- Debe coincidir con el path cacheado en el workflow -->
           <dataDirectory>${user.home}/.m2/repository/org/owasp/dependency-check-data</dataDirectory>
-          <!-- (Opcional) falla si hay CVSS alto -->
-          <!-- <failOnCVSS>7.0</failOnCVSS> -->
-          <!-- Formatos de reporte -->
           <formats>HTML,JSON</formats>
-          <!-- API key desde env (se inyecta en Actions) -->
+          <!-- API key se inyecta vía env en el job -->
           <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+          <!-- Analizadores rápidos opcionales -->
+          <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
+          <knownExploitedEnabled>true</knownExploitedEnabled>
+          <!-- Si quieres acelerar aún más:
+               <skipTestScope>true</skipTestScope>
+               <skipProvidedScope>true</skipProvidedScope>
+          -->
         </configuration>
-        <executions>
-          <!-- NO lo amarramos a una fase; lo invocamos desde CI de forma condicional -->
-          <execution>
-            <id>dc-check</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>none</phase>
-          </execution>
-        </executions>
+        <!-- Sin executions para evitar correr en verify -->
       </plugin>
     </plugins>
   </build>
