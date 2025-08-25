@@ -58,11 +58,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
-        <plugin>
-          <groupId>org.sonarsource.scanner.maven</groupId>
-          <artifactId>sonar-maven-plugin</artifactId>
-          <version>3.9.1.2184</version>
-        </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -108,8 +103,20 @@
         <artifactId>dependency-check-maven</artifactId>
         <version>12.1.0</version>
         <configuration>
+          <!-- Deshabilitamos la descarga de la base de datos de NVD. -->
           <nvdDownloadDisabled>true</nvdDownloadDisabled>
+
+          <!-- Habilitamos el analizador de OSS Index, que es mucho más rápido. -->
+          <!-- Esto omite la descarga de la base de datos NVD local. -->
           <ossindexAnalyzerEnabled>true</ossindexAnalyzerEnabled>
+
+          <!-- Deshabilitamos los analizadores que intentan descargar bases de datos. -->
+          <analyzers>
+            <retirejsEnabled>false</retirejsEnabled>
+            <nvdEnabled>false</nvdEnabled>
+          </analyzers>
+          
+          <!-- Mantener el resto de la configuración. -->
           <skip>false</skip>
         </configuration>
         <executions>
